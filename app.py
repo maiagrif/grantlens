@@ -7,6 +7,8 @@ import os
 import streamlit as st
 
 st.set_page_config(page_title="GrantLens", page_icon="🔎", layout="wide")
+# On a phone, a chart wider than the screen (the confusion matrix) scrolls inside its own box, not the page.
+st.markdown("<style>[data-testid='stVegaLiteChart']{overflow-x:auto;max-width:100%}</style>", unsafe_allow_html=True)
 
 # On Streamlit Community Cloud these live in the app's secrets; locally, in the environment.
 for key in ("ANTHROPIC_API_KEY", "APP_PASSCODE", "MAX_QUESTIONS_PER_SESSION", "GRANTLENS_READONLY"):

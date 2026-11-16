@@ -37,6 +37,12 @@ def with_shares(df: pd.DataFrame, by: list[str]) -> pd.DataFrame:
     return df
 
 
+def chart_heading(title: str, names: list[str], colors: list[str]) -> None:
+    """Title and legend as page text: they wrap on a phone, where chart-drawn ones get cut off."""
+    st.markdown(f"**{title}**")
+    st.markdown(charts.legend_html(names, colors), unsafe_allow_html=True)
+
+
 def show_table(df: pd.DataFrame, label: str = "Show the data") -> None:
     with st.expander(label):
         st.dataframe(df, hide_index=True, width="stretch",
@@ -82,8 +88,8 @@ def page_compare():
         if df.empty:
             continue
         df = with_shares(df, ["funder"])
-        st.altair_chart(charts.grouped_share_bars(df, field, "funder", charts.FUNDER_COLORS, f"{title}, {y0}–{y1}"),
-                        width="stretch")
+        chart_heading(f"{title}, {y0}–{y1}", list(dict.fromkeys(df["funder"])), charts.FUNDER_COLORS)
+        st.altair_chart(charts.grouped_share_bars(df, field, "funder", charts.FUNDER_COLORS), width="stretch")
         show_table(df.sort_values(["funder", "share"], ascending=[True, False]))
 
     st.subheader("How each theme's share changed over time")
@@ -91,7 +97,16 @@ def page_compare():
              "WHERE theme IS NOT NULL AND start_year BETWEEN 2006 AND ? GROUP BY funder, theme, start_year", [LAST_YEAR])
     st.caption("Mott from 2006 (earlier years have too few grants to show a share); Gates from 2015.")
     df = with_shares(df, ["funder", "start_year"])
-    st.altair_chart(charts.trend_small_multiples(df, charts.FUNDER_COLORS, "Share of each funder's dollars, by year"))
+    funders = sorted(df["funder"].unique())
+    st.markdown(charts.legend_html(funders, charts.FUNDER_COLORS), unsafe_allow_html=True)
+    st.caption("Each chart has its own vertical scale, so read the trend within a theme, not across themes.")
+    order = df.groupby("theme")["share"].mean().sort_values(ascending=False).index.tolist()
+    for i in range(0, len(order), 3):  # three across on a laptop; st.columns stack to one on a phone
+        for col, theme in zip(st.columns(3), order[i:i + 3]):
+            col.markdown(f"**{theme}**")
+            sub = df[df["theme"] == theme]
+            col.altair_chart(charts.trend_line(sub, funders, charts.FUNDER_COLORS, float(sub["share"].max()) * 1.1),
+                             width="stretch")
     show_table(df.sort_values(["theme", "funder", "start_year"]))
 
 
@@ -122,9 +137,9 @@ def page_explore():
                      WHERE {w} AND theme IS NOT NULL GROUP BY period, theme ORDER BY period DESC""", params)
         df = with_shares(df, ["period"])
         df = df.rename(columns={"period": "period"})
-        st.altair_chart(charts.grouped_share_bars(df, "theme", "period", charts.PERIOD_COLORS,
-                                                  "How the theme mix shifted (share of dollars)"),
-                        width="stretch")
+        chart_heading("How the theme mix shifted (share of dollars)", list(dict.fromkeys(df["period"])),
+                      charts.PERIOD_COLORS)
+        st.altair_chart(charts.grouped_share_bars(df, "theme", "period", charts.PERIOD_COLORS), width="stretch")
         show_table(df)
 
     st.subheader("Largest grantees")
@@ -201,16 +216,14 @@ def check_results():
     names = table["model"].tolist()
     prim = db.primary_model(c)
     model = st.selectbox("Look closer at", names, index=names.index(prim) if prim in names else 0)
-    c1, c2 = st.columns([3, 2])
-    with c1:
-        cm = pd.DataFrame(benchmark.confusion(c, model, funder, sample_only))
-        st.altair_chart(charts.confusion_heatmap(cm, "Theme: funder's category vs. the AI's (diagonal = agree)",
-                                                 "Funder's category"), width="stretch")
-    with c2:
-        st.write("**Does the AI know when it's unsure?**")
-        st.dataframe(pd.DataFrame(benchmark.accuracy_by_confidence(c, model, funder, sample_only)),
-                     hide_index=True, width="stretch")
-        st.caption("If low-confidence labels match less often, those grants can be routed to a person.")
+    cm = pd.DataFrame(benchmark.confusion(c, model, funder, sample_only))
+    st.markdown("**Theme: funder's category vs. the AI's** (diagonal = agree)")
+    st.caption("On a phone, swipe the grid sideways to see every column.")
+    st.altair_chart(charts.confusion_heatmap(cm, "Funder's category"), width="content")
+    st.write("**Does the AI know when it's unsure?**")
+    st.dataframe(pd.DataFrame(benchmark.accuracy_by_confidence(c, model, funder, sample_only)),
+                 hide_index=True, width="stretch")
+    st.caption("If low-confidence labels match less often, those grants can be routed to a person.")
     dis = pd.DataFrame(benchmark.disagreements(c, model, funder, sample_only))
     with st.expander(f"Where the funder and {model} disagreed ({len(dis):,} shown)"):
         if dis.empty:
