@@ -22,7 +22,7 @@ from views import page_ask, page_check, page_compare, page_explore  # noqa: E402
 
 with st.sidebar:
     st.markdown("### GrantLens")
-    st.write("AI-assisted analysis of public grant data, with the AI's accuracy measured against a person's labels.")
+    st.write("AI-assisted analysis of public grant data, with the AI's accuracy measured against each funder's own categories.")
     st.caption("Independent project by Maia Griffith. Uses the public grant records of the Mott Foundation "
                "([grants database](https://www.mott.org/grants/)) and the Gates Foundation "
                "([committed grants](https://www.gatesfoundation.org/about/committed-grants)). "

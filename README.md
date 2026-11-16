@@ -4,7 +4,7 @@
 
 GrantLens has Claude read and categorize tens of thousands of public grant records into one shared set of themes, strategies and populations, so different funders' portfolios can be compared side by side. Before trusting those labels, it measures them, without hand-labeling: each funder's staff already sorted its grants into programs and topics, so those categories become the answer key for theme. The AI never sees them. Agreement is scored with Cohen's kappa.
 
-**Live demo:** _[add your Streamlit link]_
+**Live demo:** [grantlens.streamlit.app](https://grantlens.streamlit.app)
 
 > Uses public grant records from the [Mott Foundation](https://www.mott.org/grants/) and the [Gates Foundation](https://www.gatesfoundation.org/about/committed-grants). Independent project, not affiliated with or endorsed by either foundation.
 
