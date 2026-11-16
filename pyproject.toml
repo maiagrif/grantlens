@@ -1,0 +1,22 @@
+[project]
+name = "grantlens"
+version = "0.1.0"
+description = "AI-assisted analysis of public grant data, with the AI's accuracy measured against human labels."
+readme = "README.md"
+authors = [{ name = "Maia Griffith" }]
+requires-python = ">=3.12"
+dependencies = [
+    "anthropic>=2.8.0",
+    "beautifulsoup4>=4.15.0",
+    "httpx>=0.28.1",
+    "pyyaml>=6.0.3",
+    "streamlit>=1.67.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

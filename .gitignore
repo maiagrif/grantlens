@@ -1,0 +1,10 @@
+# raw Mott pages are re-fetchable; parsed.jsonl and the Gates CSV are kept so the database rebuilds offline
+data/raw/mott/*.html
+data/labels/batches.json
+.env
+.venv/
+__pycache__/
+.pytest_cache/
+.streamlit/secrets.toml
+.claude/
+evals/results/

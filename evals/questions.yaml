@@ -1,0 +1,75 @@
+# Questions for the Ask tab. Each correct answer is computed by SQL at eval time, so the set stays valid when the
+# data is refreshed.
+# kind:
+#   number   - the answer must state the value `expected_sql` returns (counts exact; dollar amounts within 1%)
+#   text     - the answer must contain the string `expected_sql` returns (case-insensitive)
+#   retrieve - at least one cited grant must be in the set `expected_sql` returns
+#   decline  - the data can't answer; the answer must say so (any of `expect_any` phrases) and cite nothing invented
+
+- id: mott-flint-count-2020
+  kind: number
+  question: How many Mott Foundation Flint Area grants have a grant period that started in 2020?
+  expected_sql: SELECT COUNT(*) FROM grants WHERE funder = 'Mott Foundation' AND program = 'Flint Area' AND start_year = 2020
+
+- id: mott-env-total-2015
+  kind: number
+  question: What was the total dollar amount of Mott Foundation Environment program grants that started in 2015?
+  expected_sql: SELECT SUM(amount_usd) FROM grants WHERE funder = 'Mott Foundation' AND program = 'Environment' AND start_year = 2015
+
+- id: gates-count-2024
+  kind: number
+  question: How many grants did the Gates Foundation commit in 2024?
+  expected_sql: SELECT COUNT(*) FROM grants WHERE funder = 'Gates Foundation' AND start_year = 2024
+
+- id: gates-malaria-total-2023
+  kind: number
+  question: What was the total amount of Gates Foundation grants in the Malaria topic committed in 2023?
+  expected_sql: SELECT SUM(amount_usd) FROM grants WHERE funder = 'Gates Foundation' AND subprogram = 'Malaria' AND start_year = 2023
+
+- id: mott-flint-distinct-grantees-2022
+  kind: number
+  question: How many different organizations received Mott Flint Area grants starting in 2022?
+  expected_sql: SELECT COUNT(DISTINCT grantee) FROM grants WHERE funder = 'Mott Foundation' AND program = 'Flint Area' AND start_year = 2022
+
+- id: mott-youth-top-grantee
+  kind: text
+  question: Which organization has received the most total funding from Mott's Youth Engagement program?
+  expected_sql: >-
+    SELECT grantee FROM grants WHERE funder = 'Mott Foundation' AND program = 'Youth Engagement'
+    GROUP BY grantee ORDER BY SUM(amount_usd) DESC LIMIT 1
+
+- id: gates-largest-since-2020
+  kind: text
+  question: What is the largest single Gates Foundation grant committed since 2020, and who received it?
+  expected_sql: SELECT grantee FROM grants WHERE funder = 'Gates Foundation' AND start_year >= 2020 ORDER BY amount_usd DESC LIMIT 1
+
+- id: mott-flint-water
+  kind: retrieve
+  question: Find Mott grants that responded to the Flint water crisis.
+  expected_sql: >-
+    SELECT grant_id FROM grants WHERE funder = 'Mott Foundation' AND start_year >= 2015
+    AND (description LIKE '%water crisis%' OR description LIKE '%lead%water%' OR description LIKE '%water%lead%')
+    AND (description LIKE '%Flint%' OR geographic_focus LIKE '%Flint%')
+
+- id: africa-community-foundations
+  kind: retrieve
+  question: Which grants, from either funder, support community foundations or community philanthropy in Africa?
+  expected_sql: >-
+    SELECT grant_id FROM grants
+    WHERE (description LIKE '%community foundation%' OR description LIKE '%community philanthropy%')
+    AND (geographic_focus LIKE '%Africa%' OR location LIKE '%South Africa%' OR location LIKE '%Kenya%'
+         OR location LIKE '%Zambia%' OR location LIKE '%Tanzania%' OR location LIKE '%Ghana%'
+         OR location LIKE '%Nigeria%' OR location LIKE '%Uganda%' OR location LIKE '%Malawi%'
+         OR description LIKE '%Africa%')
+
+- id: gates-community-health-workers
+  kind: retrieve
+  question: Which Gates Foundation grants support community health workers?
+  expected_sql: >-
+    SELECT grant_id FROM grants WHERE funder = 'Gates Foundation'
+    AND (description LIKE '%community health worker%' OR description LIKE '%community health workforce%')
+
+- id: outcomes-not-in-data
+  kind: decline
+  question: By how many percentage points did graduation rates rise at schools that received Mott grants?
+  expect_any: ["not include", "doesn't include", "does not include", "not contain", "doesn't contain", "does not contain", "no outcome", "not track", "isn't in", "is not in", "not available", "can't answer", "cannot answer", "can't determine", "cannot determine"]
